@@ -1,0 +1,131 @@
+/* Form and Edit Buttons */
+#edit-buttons {
+  display: none;
+  margin-bottom: 20px;
+}
+
+.edit-btn {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.9em;
+  margin-right: 15px;
+}
+
+/* Visual Response Styles */
+.visual-response {
+  font-family: inherit;
+  color: var(--text-color);
+  padding: 15px;
+}
+
+.route-summary {
+  background: rgba(74, 111, 165, 0.05);
+  border-radius: var(--radius-md);
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.route-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.route-stats {
+  display: flex;
+  gap: 20px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.9em;
+}
+
+.map-placeholder {
+  height: 150px;
+  background: #f0f0f0;
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #666;
+}
+
+.transport-options {
+  margin: 25px 0;
+}
+
+.option-card {
+  display: flex;
+  gap: 15px;
+  padding: 15px;
+  border-radius: var(--radius-md);
+  margin-bottom: 15px;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-sm);
+}
+
+.option-card.bus {
+  border-left: 4px solid #4a6fa5;
+}
+
+.option-card.train {
+  border-left: 4px solid #43a047;
+}
+
+.option-card.taxi {
+  border-left: 4px solid #e53935;
+}
+
+.option-icon {
+  font-size: 1.5em;
+  color: var(--primary-color);
+}
+
+.option-details {
+  flex: 1;
+}
+
+.option-meta {
+  display: flex;
+  gap: 15px;
+  margin-top: 8px;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.traffic-alert {
+  margin-top: 25px;
+}
+
+.alert-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 15px;
+  border-radius: 20px;
+  margin: 10px 0;
+}
+
+.alert-level.moderate {
+  background: rgba(255, 179, 0, 0.1);
+  color: var(--warning-color);
+}
+
+.hotspots ul {
+  margin-top: 10px;
+  padding-left: 20px;
+}
+
+.hotspots li {
+  margin-bottom: 5px;
+}
