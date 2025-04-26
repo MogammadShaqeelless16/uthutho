@@ -1,6 +1,12 @@
 import { HumanMessage } from '@langchain/core/messages';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import MarkdownIt from 'markdown-it';
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // API Key Banner Function
 function maybeShowApiKeyBanner(key, action = `enter it at the top of <code>main.js</code>`) {
@@ -21,34 +27,190 @@ document.addEventListener("DOMContentLoaded", function () {
   const toInput = document.getElementById('to');
   const chatContainer = document.getElementById('output');
   const languageSelect = document.getElementById('languageSelect');
+  const transportSelect = document.getElementById('transportSelect');
   const themeToggle = document.getElementById('theme-toggle');
   const currentLocationBtn = document.getElementById('current-location');
+  const timeEstimateBtn = document.getElementById('time-estimate-btn');
 
   // Initialize conversation
-  let conversation = [
-    {
-      sender: 'bot',
-      message: 'Hi there! 👋 I\'m Uthutho, your transport AI assistant. Where would you like to go today?',
-      timestamp: new Date()
+  let conversation = [];
+  let currentUser = null;
+  let queryType = 'full'; // 'full' or 'time-only'
+
+  // Auth modal elements
+  const authModal = document.getElementById('auth-modal');
+  const loginForm = document.getElementById('login-form');
+  const signupForm = document.getElementById('signup-form');
+  const showLogin = document.getElementById('show-login');
+  const showSignup = document.getElementById('show-signup');
+  const closeModal = document.querySelector('.close-modal');
+
+  // Check auth state on load
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session) {
+      currentUser = session.user;
+      authModal.style.display = 'none';
+      addWelcomeMessage();
+    } else {
+      authModal.style.display = 'block';
+      addMessage('Hi there! 👋 Please log in to use Uthutho, your transport AI assistant.', 'bot');
     }
-  ];
+  });
+
+  // Set up event listeners
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (!currentUser) {
+      authModal.style.display = 'block';
+      addMessage('Please log in to use the transport assistant.', 'bot');
+    } else {
+      queryType = 'full';
+      processTransportQuery();
+    }
+  });
+
+  timeEstimateBtn.addEventListener('click', function() {
+    if (!currentUser) {
+      authModal.style.display = 'block';
+      addMessage('Please log in to use the transport assistant.', 'bot');
+    } else {
+      queryType = 'time-only';
+      processTransportQuery();
+    }
+  });
+
+  // Auth form toggling
+  showLogin?.addEventListener('click', (e) => {
+    e.preventDefault();
+    signupForm.style.display = 'none';
+    loginForm.style.display = 'block';
+    document.getElementById('auth-title').textContent = 'Login';
+  });
+
+  showSignup?.addEventListener('click', (e) => {
+    e.preventDefault();
+    loginForm.style.display = 'none';
+    signupForm.style.display = 'block';
+    document.getElementById('auth-title').textContent = 'Sign Up';
+  });
+
+  closeModal?.addEventListener('click', () => {
+    authModal.style.display = 'none';
+  });
+
+  // Auth form submissions
+  loginForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      showAuthError(error.message);
+      return;
+    }
+
+    currentUser = data.user;
+    authModal.style.display = 'none';
+    addWelcomeMessage();
+  });
+
+  signupForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
+    const firstName = document.getElementById('first-name').value;
+    const lastName = document.getElementById('last-name').value;
+    
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          preferred_transport: null,
+        },
+      },
+    });
+
+    if (error) {
+      showAuthError(error.message);
+      return;
+    }
+
+    currentUser = data.user;
+    authModal.style.display = 'none';
+    addWelcomeMessage(firstName);
+  });
+
+  function showAuthError(message) {
+    const errorElement = document.createElement('div');
+    errorElement.className = 'error-message';
+    errorElement.textContent = message;
+    
+    const authForm = document.getElementById('auth-form');
+    const existingError = authForm.querySelector('.error-message');
+    if (existingError) {
+      authForm.removeChild(existingError);
+    }
+    
+    authForm.prepend(errorElement);
+  }
+
+  function addWelcomeMessage(firstName = null) {
+    const welcomeMessage = firstName 
+      ? `Welcome ${firstName}! 👋 I'm Uthutho, your transport AI assistant. Where would you like to go today?`
+      : 'Welcome back! Where would you like to go today?';
+    
+    addMessage(welcomeMessage, 'bot');
+  }
+
+  // Add logout button to header
+  const headerActions = document.querySelector('.header-actions');
+  if (headerActions) {
+    const logoutBtn = document.createElement('button');
+    logoutBtn.className = 'btn icon-btn';
+    logoutBtn.id = 'logout-btn';
+    logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
+    headerActions.appendChild(logoutBtn);
+
+    logoutBtn.addEventListener('click', async () => {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        addMessage(`Logout failed: ${error.message}`, 'bot');
+      } else {
+        currentUser = null;
+        authModal.style.display = 'block';
+        document.getElementById('output').innerHTML = '';
+        addMessage('Please log in to use Uthutho, your transport AI assistant.', 'bot');
+      }
+    });
+  }
 
   // Get user's current location on page load
   getCurrentLocation().then(location => {
     if (location) {
       fromInput.value = location;
-      addMessage(`I've automatically set your current location to ${location}`, 'bot');
+      if (currentUser) {
+        addMessage(`I've automatically set your current location to ${location}`, 'bot');
+      }
     }
   });
 
   // Set up event listeners
-  form.addEventListener('submit', askUthuthoAI);
   themeToggle.addEventListener('click', toggleTheme);
   currentLocationBtn.addEventListener('click', () => {
     getCurrentLocation().then(location => {
       if (location) {
         fromInput.value = location;
-        addMessage(`Updated your current location to ${location}`, 'bot');
+        if (currentUser) {
+          addMessage(`Updated your current location to ${location}`, 'bot');
+        }
       }
     });
   });
@@ -128,11 +290,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Main function to handle transport queries
-  async function askUthuthoAI(e) {
-    e.preventDefault();
+  async function processTransportQuery() {
     const fromLocation = fromInput.value.trim();
     const toLocation = toInput.value.trim();
     const language = languageSelect.value;
+    const transportType = transportSelect.value;
 
     if (!fromLocation || !toLocation) {
       addMessage('Please enter both your starting location and destination.', 'bot');
@@ -145,7 +307,7 @@ document.addEventListener("DOMContentLoaded", function () {
     scrollToBottom();
 
     try {
-      const prompt = generatePrompt(fromLocation, toLocation, language);
+      const prompt = generatePrompt(fromLocation, toLocation, language, queryType, transportType);
 
       const contents = [
         new HumanMessage({ content: [{ type: 'text', text: prompt }] })
@@ -176,47 +338,52 @@ document.addEventListener("DOMContentLoaded", function () {
       console.error(err);
       
       // Fallback to local calculation
-      calculateLocalRoute(fromLocation, toLocation);
+      calculateLocalRoute(fromLocation, toLocation, queryType, transportType);
     }
   }
 
   // Generate the prompt for Gemini
-  function generatePrompt(fromLocation, toLocation, language) {
+  function generatePrompt(fromLocation, toLocation, language, queryType = 'full', transportType = 'all') {
+    const transportTypeMap = {
+      bus: 'bus only',
+      train: 'train only',
+      taxi: 'taxi only',
+      rideshare: 'ride-hailing only',
+      walking: 'walking only',
+      all: 'all available'
+    };
+
+    const queryTypeMap = {
+      'full': 'Provide full route details with all information',
+      'time-only': 'Provide only time estimates for each option'
+    };
+
     const languageMapping = {
-      en: `You are Uthutho AI, a South African transport assistant. Provide an infographic-style response with transport options from ${fromLocation} to ${toLocation}. Include:`,
-      zu: `Uyi-Uthutho AI, umsizi wezothutho waseNingizimu Afrika. Nikeza izinketho zokuhamba ezichazwe kahle ukusuka ${fromLocation} ukuya ${toLocation}. Faka:`,
-      xh: `Uyi-Uthutho AI, umncedisi wezothutho waseMzantsi Afrika. Nika iinketho zothutho ezivela ${fromLocation} ukuya ${toLocation}. Quka:`
+      en: `You are Uthutho AI, a South African transport assistant. ${queryTypeMap[queryType]} from ${fromLocation} to ${toLocation} using ${transportTypeMap[transportType]} transport options. Include:`,
+      zu: `Uyi-Uthutho AI, umsizi wezothutho waseNingizimu Afrika. ${queryTypeMap[queryType]} ukusuka ${fromLocation} ukuya ${toLocation} usebenzisa ${transportTypeMap[transportType]} izinketho zokuhamba. Faka:`,
+      xh: `Uyi-Uthutho AI, umncedisi wezothutho waseMzantsi Afrika. ${queryTypeMap[queryType]} ukusuka ${fromLocation} ukuya ${toLocation} usebenzisa ${transportTypeMap[transportType]} iinketho zothutho. Quka:`
     };
 
     const promptDetails = {
       en: `
-      - Different transport options available (bus, train, taxi, etc.)
+      - Different transport options available
       - Estimated travel times for each option
-      - Approximate costs
-      - Safety recommendations
-      - Any current traffic alerts
-      - Alternative routes if available
+      ${queryType === 'full' ? '- Approximate costs\n- Safety recommendations\n- Any current traffic alerts\n- Alternative routes if available' : ''}
       - Respond using ONLY markdown formatted for visual display
       - Include relevant emojis for each transport type
       - Use bullet points and clear section headings
       - Response in English only
       `,
       zu: `
-      - Izinketho zokuhamba ezahlukene (amabhasi, izitimela, amatekisi, njll.)
+      - Izinketho zokuhamba ezahlukene
       - Isikhathi sokuhamba esilinganiselwe salezo zinketho
-      - Izindleko ezilinganiselwe
-      - Izincomo zokuphepha
-      - Noma yiziphi izaziso zamanje zethrafikhi
-      - Izindlela ezingezinye uma zikhona
+      ${queryType === 'full' ? '- Izindleko ezilinganiselwe\n- Izincomo zokuphepha\n- Noma yiziphi izaziso zamanje zethrafikhi\n- Izindlela ezingezinye uma zikhona' : ''}
       - Phendula ngesiZulu kuphela
       `,
       xh: `
-      - Iinketho zothutho ezahlukeneyo (iibhasi, iitreyini, iitekisi, njl.)
+      - Iinketho zothutho ezahlukeneyo
       - Ixesha eliqikelelweyo lohambo ngalunye
-      - Amaxabiso aqikelelweyo
-      - Iingcebiso zokhuseleko
-      - Naziphi izaziso zethrafikhi zangoku
-      - Ezinye iindlela zokuhamba ukuba zikhona
+      ${queryType === 'full' ? '- Amaxabiso aqikelelweyo\n- Iingcebiso zokhuseleko\n- Naziphi izaziso zethrafikhi zangoku\n- Ezinye iindlela zokuhamba ukuba zikhona' : ''}
       - Phendula ngesiXhosa kuphela
       `
     };
@@ -225,31 +392,45 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Fallback route calculation
-  function calculateLocalRoute(fromLocation, toLocation) {
-    const response = `
-## 🚌 Transport Options from ${fromLocation} to ${toLocation}
-
+  function calculateLocalRoute(fromLocation, toLocation, queryType = 'full', transportType = 'all') {
+    let response = `## Transport Options from ${fromLocation} to ${toLocation}\n`;
+    
+    if (transportType === 'all' || transportType === 'bus') {
+      response += `
 ### 🚍 MyCiTi Bus
 - **Route T01**: Civic Centre → Table View
-  - ⏱️ 25 mins | 💵 R25 | 🔄 Every 15 mins
+  - ⏱️ 25 mins${queryType === 'full' ? ' | 💵 R25 | 🔄 Every 15 mins' : ''}
 - **Route 104**: Adderley St → Sea Point
-  - ⏱️ 15 mins | 💵 R15 | 🔄 Every 8-12 mins
+  - ⏱️ 15 mins${queryType === 'full' ? ' | 💵 R15 | 🔄 Every 8-12 mins' : ''}
+`;
+    }
 
+    if (transportType === 'all' || transportType === 'train') {
+      response += `
 ### 🚆 Metrorail
 - **Northern Line**: On time
-  - ⏱️ 35 mins | 💵 R12.50 | 🔄 Every 20 mins
+  - ⏱️ 35 mins${queryType === 'full' ? ' | 💵 R12.50 | 🔄 Every 20 mins' : ''}
+`;
+    }
 
+    if ((transportType === 'all' || transportType === 'taxi' || transportType === 'rideshare') && queryType === 'full') {
+      response += `
 ### 🚕 Other Options
-- **Metered Taxi**: ~R80-120 (20-30 mins)
-- **Ride-hailing**: ~R60-100 (15-25 mins)
+${transportType === 'all' || transportType === 'taxi' ? '- **Metered Taxi**: ~R80-120 (20-30 mins)\n' : ''}
+${transportType === 'all' || transportType === 'rideshare' ? '- **Ride-hailing**: ~R60-100 (15-25 mins)\n' : ''}
+`;
+    }
 
+    if (queryType === 'full') {
+      response += `
 ### ⚠️ Traffic Alert
 - Moderate traffic on N1 Highway
 - Avoid Buitengragt St between 4-6pm
 
 ### 💡 Safety Tip
 Avoid empty train carriages and be aware of your surroundings
-    `;
+`;
+    }
     
     addMessage(response, 'bot');
   }
