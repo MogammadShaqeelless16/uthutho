@@ -110,6 +110,8 @@ function showWelcomeMessage(firstName = null) {
   ChatMessage.add(message, 'bot');
 }
 
+
+
 function setupLoggedInState() {
   // Set current location if available
   const fromInput = document.getElementById('from');
@@ -123,6 +125,15 @@ function setupLoggedInState() {
       console.error('Location detection failed:', error);
     });
   }
+
+  const headerActions = document.querySelector('.header-actions');
+  const profileBtn = document.createElement('button');
+  profileBtn.className = 'btn icon-btn';
+  profileBtn.innerHTML = '<i class="fas fa-user"></i>';
+  profileBtn.addEventListener('click', showProfilePage);
+  headerActions.prepend(profileBtn);
+
+  
 
   // Add logout button
   const logoutBtn = document.createElement('button');
@@ -151,6 +162,53 @@ function setupLoggedInState() {
     }
   });
 }
+
+
+async function showProfilePage() {
+  // Create profile form
+  const profileHTML = `
+    <div class="profile-container">
+      <h2>My Profile</h2>
+      <form id="profile-form">
+        <div class="input-group">
+          <label>First Name</label>
+          <input type="text" id="profile-first-name" value="${currentUser.profile?.first_name || ''}">
+        </div>
+        <div class="input-group">
+          <label>Last Name</label>
+          <input type="text" id="profile-last-name" value="${currentUser.profile?.last_name || ''}">
+        </div>
+        <div class="input-group">
+          <label>Home Location</label>
+          <div class="input-wrapper">
+            <input type="text" id="profile-home" value="${currentUser.profile?.home || ''}">
+            <div id="home-suggestions" class="suggestions"></div>
+          </div>
+        </div>
+        <button type="submit" class="btn primary">Save Changes</button>
+      </form>
+    </div>
+  `;
+
+  // Show profile form in chat container temporarily
+  const chatContainer = document.getElementById('output');
+  chatContainer.innerHTML = '';
+  chatContainer.insertAdjacentHTML('afterbegin', profileHTML);
+
+  setupAddressAutocomplete('profile-home', 'home-suggestions');
+  
+  document.getElementById('profile-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await updateProfile({
+      first_name: document.getElementById('profile-first-name').value,
+      last_name: document.getElementById('profile-last-name').value,
+      home: document.getElementById('profile-home').value
+    });
+    // Reload to refresh the UI
+    location.reload();
+  });
+}
+
 
 function setupHeaderUserInfo() {
   if (!currentUser?.profile) return;

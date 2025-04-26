@@ -25,6 +25,19 @@
     </header>
 
     <main>
+      
+      <div class="chat-container">
+        <div id="output" class="chat-messages">
+          <div class="message bot">
+            <div class="message-content">
+              <div class="bot-icon"><i class="fas fa-robot"></i></div>
+              <div class="message-text">Hi there! 👋 I'm Uthutho, your transport AI assistant. Please log in to get started.</div>
+            </div>
+            <small class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+          </div>
+        </div>
+      </div>
+      
       <div class="search-container">
         <form id="search-form">
           <div class="input-group">
@@ -84,17 +97,6 @@
         </form>
       </div>
 
-      <div class="chat-container">
-        <div id="output" class="chat-messages">
-          <div class="message bot">
-            <div class="message-content">
-              <div class="bot-icon"><i class="fas fa-robot"></i></div>
-              <div class="message-text">Hi there! 👋 I'm Uthutho, your transport AI assistant. Please log in to get started.</div>
-            </div>
-            <small class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
-          </div>
-        </div>
-      </div>
     </main>
 
     <footer>
