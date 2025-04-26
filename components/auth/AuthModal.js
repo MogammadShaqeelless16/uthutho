@@ -1,54 +1,52 @@
 export class AuthModal {
     constructor() {
       this.modal = document.getElementById('auth-modal');
+      this.loginForm = document.getElementById('login-form');
+      this.signupForm = document.getElementById('signup-form');
     }
   
     init({ onLogin, onSignup }) {
-      this.closeModal = document.querySelector('.close-modal');
-      this.showLogin = document.getElementById('show-login');
-      this.showSignup = document.getElementById('show-signup');
-      this.loginForm = document.getElementById('login-form');
-      this.signupForm = document.getElementById('signup-form');
+      // Form toggling
+      document.getElementById('show-login')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.showLoginForm();
+      });
+      
+      document.getElementById('show-signup')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.showSignupForm();
+      });
   
-      // Event listeners
-      this.closeModal?.addEventListener('click', () => this.hide());
-      this.showLogin?.addEventListener('click', (e) => this.showLoginForm(e));
-      this.showSignup?.addEventListener('click', (e) => this.showSignupForm(e));
+      document.querySelector('.close-modal')?.addEventListener('click', () => this.hide());
   
       // Form submissions
       this.loginForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const error = await onLogin(
-          document.getElementById('login-email').value,
-          document.getElementById('login-password').value
-        );
-        if (error) this.showError(error.message);
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        await onLogin(email, password);
       });
   
       this.signupForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const error = await onSignup(
-          document.getElementById('signup-email').value,
-          document.getElementById('signup-password').value,
-          document.getElementById('first-name').value,
-          document.getElementById('last-name').value
-        );
-        if (error) this.showError(error.message);
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
+        const firstName = document.getElementById('first-name').value;
+        const lastName = document.getElementById('last-name').value;
+        await onSignup(email, password, firstName, lastName);
       });
     }
   
     show() { this.modal.style.display = 'block'; }
     hide() { this.modal.style.display = 'none'; }
   
-    showLoginForm(e) {
-      e.preventDefault();
+    showLoginForm() {
       this.signupForm.style.display = 'none';
       this.loginForm.style.display = 'block';
       document.getElementById('auth-title').textContent = 'Login';
     }
   
-    showSignupForm(e) {
-      e.preventDefault();
+    showSignupForm() {
       this.loginForm.style.display = 'none';
       this.signupForm.style.display = 'block';
       document.getElementById('auth-title').textContent = 'Sign Up';

@@ -1,20 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase with proper env variable checks
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(`
-    Missing Supabase environment variables!
-    Please check your .env file and make sure:
-    VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set
-  `);
+  throw new Error('Missing Supabase environment variables');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Auth functions remain the same...
 export async function getSession() {
   return await supabase.auth.getSession();
 }
@@ -30,10 +24,9 @@ export async function signup(email, password, firstName, lastName) {
     options: {
       data: {
         first_name: firstName,
-        last_name: lastName,
-        preferred_transport: null,
-      },
-    },
+        last_name: lastName
+      }
+    }
   });
 }
 
