@@ -1,6 +1,8 @@
 import { HumanMessage } from '@langchain/core/messages';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 
+const googleAPIKEY = import.meta.env.GOOGLE_API_KEY;
+
 export function generatePrompt(from, to, language, queryType, transportType) {
   const prompts = {
     en: `Plan route from ${from} to ${to} using ${transportType}. Include time estimates${queryType === 'full' ? ', costs, and safety tips' : ''}.`,
@@ -13,7 +15,7 @@ export function generatePrompt(from, to, language, queryType, transportType) {
 export async function getGeminiResponse(prompt) {
   const chat = new ChatGoogleGenerativeAI({
     modelName: 'gemini-1.5-pro',
-    apiKey: 'AIzaSyCkixn21fvW0by1S8SrP7h5jotBlpBW1Rk',
+    apiKey: googleAPIKEY,
     safetySettings: [],
   });
 
