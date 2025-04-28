@@ -3,7 +3,11 @@ import { ChatMessage } from './components/chat/ChatMessage.js';
 import { TransportForm } from './components/forms/TransportForm.js';
 import { TransportService } from './services/transportService.js';
 import { getSession, login, signup, logout, getProfile } from './services/authService.js';
-import { getCurrentLocation } from './services/locationService.js';
+import { 
+  getCurrentLocation,
+  setupAddressAutocomplete,  // Make sure this is imported
+  geocodeAddress           // If you need this too
+} from './services/locationService.js';
 
 // Initialize services and components
 const authModal = new AuthModal();
