@@ -9,6 +9,7 @@ import { getCurrentLocation } from './services/locationService.js';
 const authModal = new AuthModal();
 const transportService = new TransportService();
 const transportForm = new TransportForm(transportService);
+
 let currentUser = null;
 
 document.addEventListener("DOMContentLoaded", async function () {
@@ -89,6 +90,10 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     // Initialize transport form
     transportForm.init();
+
+        // Set up address autocomplete after everything else is initialized
+        setupAddressAutocomplete('from', 'from-suggestions');
+        setupAddressAutocomplete('to', 'to-suggestions');
 
     // Set up theme toggle
     setupThemeToggle();

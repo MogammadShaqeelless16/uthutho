@@ -25,79 +25,62 @@
       </div>
     </header>
 
-    <main>
-      
-      <div class="chat-container">
-        <div id="output" class="chat-messages">
-          <div class="message bot">
-            <div class="message-content">
-              <div class="bot-icon"><i class="fas fa-robot"></i></div>
-              <div class="message-text">Hi there! 👋 I'm Uthutho, your transport AI assistant. Please log in to get started.</div>
-            </div>
-            <small class="message-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+            
+    <div class="search-container">
+      <form id="search-form">
+        <div class="input-group">
+          <label for="from">
+            <i class="fas fa-map-marker-alt"></i> Current location
+          </label>
+          <div class="input-wrapper">
+            <input name="from" id="from" placeholder="e.g. Mitchells Plain" type="text" required>
+            <div id="from-suggestions" class="suggestions"></div>
           </div>
         </div>
+
+        <div class="input-group">
+          <label for="to">
+            <i class="fas fa-flag-checkered"></i> Destination
+          </label>
+          <div class="input-wrapper">
+            <input name="to" id="to" placeholder="e.g. Cape Town CBD" type="text" required>
+            <div id="to-suggestions" class="suggestions"></div>
+          </div>
+        </div>
+
+        <div class="select-group">
+
+          <select id="transportSelect" class="transport-select">
+            <option value="all">All Transport Types</option>
+            <option value="bus">🚌 Bus</option>
+            <option value="train">🚆 Train</option>
+            <option value="taxi">🚕 Taxi</option>
+            <option value="rideshare">🚗 Ride-hailing</option>
+          </select>
+        </div>
+
+        <div class="form-actions enhanced-actions">
+          <button type="submit" class="btn primary">
+            <i class="fas fa-route"></i> Find Route
+          </button>
+          <button type="button" id="time-estimate-btn" class="btn secondary">
+            <i class="fas fa-clock"></i> Time Only
+          </button>
+          <button type="button" id="price-range-btn" class="btn secondary">
+            <i class="fas fa-money-bill-wave"></i> Price Range
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <main>
+      <div class="chat-wrapper">
+        <div class="chat-container">
+          <div id="output" class="chat-messages">
+          </div>
+          
+        </div>
       </div>
-      
-      <div class="search-container">
-        <form id="search-form">
-          <div class="input-group">
-            <label for="from">
-              <i class="fas fa-map-marker-alt"></i> Current location
-            </label>
-            <div class="input-wrapper">
-              <input name="from" id="from" placeholder="e.g. Mitchells Plain" type="text" required>
-              <div id="from-suggestions" class="suggestions"></div>
-            </div>
-          </div>
-
-          <div class="input-group">
-            <label for="to">
-              <i class="fas fa-flag-checkered"></i> Destination
-            </label>
-            <div class="input-wrapper">
-              <input name="to" id="to" placeholder="e.g. Cape Town CBD" type="text" required>
-              <div id="to-suggestions" class="suggestions"></div>
-            </div>
-          </div>
-
-          <div class="input-group">
-            <label for="departure-time">
-              <i class="fas fa-clock"></i> Departure Time (optional)
-            </label>
-            <input type="time" id="departure-time" name="departure-time">
-          </div>
-
-          <div class="select-group">
-            <select id="languageSelect" class="language-select">
-              <option value="en">English</option>
-              <option value="zu">isiZulu</option>
-              <option value="xh">isiXhosa</option>
-            </select>
-
-            <select id="transportSelect" class="transport-select">
-              <option value="all">All Transport Types</option>
-              <option value="bus">🚌 Bus</option>
-              <option value="train">🚆 Train</option>
-              <option value="taxi">🚕 Taxi</option>
-              <option value="rideshare">🚗 Ride-hailing</option>
-            </select>
-          </div>
-
-          <div class="form-actions enhanced-actions">
-            <button type="submit" class="btn primary">
-              <i class="fas fa-route"></i> Find Route
-            </button>
-            <button type="button" id="time-estimate-btn" class="btn secondary">
-              <i class="fas fa-clock"></i> Time Only
-            </button>
-            <button type="button" id="price-range-btn" class="btn secondary">
-              <i class="fas fa-money-bill-wave"></i> Price Range
-            </button>
-          </div>
-        </form>
-      </div>
-
     </main>
 
     <footer>

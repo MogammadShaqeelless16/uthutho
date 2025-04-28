@@ -15,6 +15,7 @@ export async function getAddressSuggestions(query) {
     const input = document.getElementById(inputId);
     const suggestions = document.getElementById(suggestionsId);
   
+    console.log('Found elements:', {input, suggestions}); // Debug
     if (!input || !suggestions) return;
   
     let timeout;
