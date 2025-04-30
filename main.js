@@ -9,16 +9,15 @@ import {
   geocodeAddress           // If you need this too
 } from './services/locationService.js';
 
-// Initialize services and components
-const authModal = new AuthModal();
-const transportService = new TransportService();
-const transportForm = new TransportForm(transportService);
-
+let authModal, transportService, transportForm;
 let currentUser = null;
 
 document.addEventListener("DOMContentLoaded", async function () {
+    // Initialize services and components
+    authModal = new AuthModal();
+    transportService = new TransportService();
+    transportForm = new TransportForm(transportService);
   try {
-    // Initialize auth modal with handlers
     authModal.init({
       onLogin: async (email, password) => {
         const { data, error } = await login(email, password);
@@ -34,8 +33,8 @@ document.addEventListener("DOMContentLoaded", async function () {
           first_name: currentUser.user_metadata?.first_name,
           last_name: currentUser.user_metadata?.last_name
         };
-        
         authModal.hide();
+
         showWelcomeMessage(currentUser.profile?.first_name);
         setupLoggedInState();
         setupHeaderUserInfo();
@@ -55,8 +54,9 @@ document.addEventListener("DOMContentLoaded", async function () {
           first_name: firstName,
           last_name: lastName
         };
-        
+
         authModal.hide();
+
         showWelcomeMessage(firstName);
         setupLoggedInState();
         setupHeaderUserInfo();
@@ -84,17 +84,17 @@ document.addEventListener("DOMContentLoaded", async function () {
       }
       
       authModal.hide();
+
       showWelcomeMessage(currentUser.profile?.first_name);
       setupLoggedInState();
       setupHeaderUserInfo();
     } else {
-      authModal.show();
-      ChatMessage.add('Hi there! 👋 Please log in to use Uthutho, your transport AI assistant.', 'bot');
-    }
+         authModal.show();
+         ChatMessage.add('Hi there! 👋 Please log in to use Uthutho, your transport AI assistant.', 'bot');
+     }
 
-    // Initialize transport form
-    transportForm.init();
-
+        // Initialize transport form
+        transportForm.init();
         // Set up address autocomplete after everything else is initialized
         setupAddressAutocomplete('from', 'from-suggestions');
         setupAddressAutocomplete('to', 'to-suggestions');
@@ -111,6 +111,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     `, 'bot');
   }
 });
+
 
 function showWelcomeMessage(firstName = null) {
   const message = firstName 
