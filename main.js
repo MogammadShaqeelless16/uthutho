@@ -5,30 +5,31 @@ import { TransportService } from './services/transportService.js';
 import { getSession, login, signup, logout, getProfile } from './services/authService.js';
 import { 
   getCurrentLocation,
-  setupAddressAutocomplete,  // Make sure this is imported
+  setupAddressAutocomplete,
   geocodeAddress           // If you need this too
 } from './services/locationService.js';
 
 let authModal, transportService, transportForm;
 let currentUser = null;
+let currentStream = null;
 
 function changeHtmlLanguage(language) {
   document.documentElement.lang = language;
-  const languageSelect = document.getElementById('languageSelect');
+  const languageSelect = document.getElementById("languageSelect");
   if (languageSelect) {
-      const options = languageSelect.options;
-      for (let i = 0; i < options.length; i++) {
-          const option = options[i];
-          if (option.value === 'en') {
-              option.text = 'English';
-          } else if (option.value === 'zu') {
-              option.text = 'Zulu';
-          } else if (option.value === 'xh') {
-              option.text = 'Xhosa';
-          } else if (option.value === 'af') {
-              option.text = 'Afrikaans';
-          }
+    const options = languageSelect.options;
+    for (let i = 0; i < options.length; i++) {
+      const option = options[i];
+      if (option.value === "en") {
+        option.text = "English";
+      } else if (option.value === "zu") {
+        option.text = "Zulu";
+      } else if (option.value === "xh") {
+        option.text = "Xhosa";
+      } else if (option.value === "af") {
+        option.text = "Afrikaans";
       }
+    }
   }
 }
 
@@ -39,18 +40,18 @@ document.addEventListener("DOMContentLoaded", async function () {
     transportForm = new TransportForm(transportService);
   try {
     authModal.init({
-      onLogin: async (email, password) => {
+      onLogin: async (email, password) => {    
         const { data, error } = await login(email, password);
         if (error) {
           authModal.showError(error.message);
           return error;
         }
-        
+
         currentUser = data.user;
         // Fetch profile after successful login
         const profile = await getProfile(currentUser.id);
         currentUser.profile = profile || {
-          first_name: currentUser.user_metadata?.first_name,
+          first_name: currentUser.user_metadata?.first_name || '',
           last_name: currentUser.user_metadata?.last_name
         };
         authModal.hide();
@@ -60,14 +61,14 @@ document.addEventListener("DOMContentLoaded", async function () {
         setupHeaderUserInfo();
         return null;
       },
-      onSignup: async (email, password, firstName, lastName) => {
+      onSignup: async (email, password, firstName, lastName) => {    
         const { data, error } = await signup(email, password, firstName, lastName);
         if (error) {
           authModal.showError(error.message);
           return error;
         }
-        
-        currentUser = data.user;
+
+                currentUser = data.user;
         // Profile is created during signup but we fetch to confirm
         const profile = await getProfile(currentUser.id);
         currentUser.profile = profile || {
@@ -87,7 +88,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     // Check initial auth state
     const { data: { session }, error } = await getSession();
     if (error) {
-      console.error('Session check error:', error);
+      console.error("Session check error:", error);
       authModal.show();
       ChatMessage.add('Error checking your session. Please try again.', 'bot');
       return;
@@ -98,10 +99,10 @@ document.addEventListener("DOMContentLoaded", async function () {
       // Ensure we have profile data
       if (!currentUser.profile) {
         currentUser.profile = await getProfile(currentUser.id) || {
-          first_name: currentUser.user_metadata?.first_name,
+          first_name: currentUser.user_metadata?.first_name || '',
           last_name: currentUser.user_metadata?.last_name
         };
-      }
+      } 
       
       authModal.hide();
 
@@ -109,24 +110,24 @@ document.addEventListener("DOMContentLoaded", async function () {
       setupLoggedInState();
       setupHeaderUserInfo();
     } else {
-         authModal.show();
-         ChatMessage.add('Hi there! 👋 Please log in to use Uthutho, your transport AI assistant.', 'bot');
-     }
+      authModal.show();
+      ChatMessage.add("Hi there! 👋 Please log in to use Uthutho, your transport AI assistant.", "bot");
+    }
 
-        // Initialize transport form
-        transportForm.init();
-        // Set up address autocomplete after everything else is initialized
-        setupAddressAutocomplete('from', 'from-suggestions');
-        setupAddressAutocomplete('to', 'to-suggestions');
+    // Initialize transport form
+    transportForm.init();
+    // Set up address autocomplete after everything else is initialized
+    setupAddressAutocomplete("from", "from-suggestions");
+    setupAddressAutocomplete("to", "to-suggestions");
 
     // Set up theme toggle
     setupThemeToggle();
 
     // Change HTML language based on selection
-    const languageSelect = document.getElementById('languageSelect');
+    const languageSelect = document.getElementById("languageSelect");
     changeHtmlLanguage(languageSelect.value);
-    languageSelect.addEventListener('change', (e) => {
-        changeHtmlLanguage(e.target.value);
+    languageSelect.addEventListener("change", (e) => {
+      changeHtmlLanguage(e.target.value);
     });
 
 
@@ -137,72 +138,142 @@ document.addEventListener("DOMContentLoaded", async function () {
       ${error.message}
       Please refresh the page or try again later.
     `, 'bot');
+
+    document.getElementById("output").innerHTML = `
+    <div class='error-message'>
+      ❌ Application Error:
+       ${error.message}
+       Please refresh the page or try again later.
+    </div>
+`;
+
   }
 });
 
 
 function showWelcomeMessage(firstName = null) {
-  const message = firstName 
+  const message = firstName
     ? `Welcome ${firstName}! 👋 I'm Uthutho, your transport AI assistant. Where would you like to go today?`
-    : 'Welcome back! Where would you like to go today?';
-  ChatMessage.add(message, 'bot');
+    : "Welcome back! Where would you like to go today?";
+  ChatMessage.add(message, "bot");
 }
 
+  
+function showAiResponse(from, to, transportType, aiResponse) {
+  const outputDiv = document.getElementById("output");
+  outputDiv.innerHTML = "";
+
+  const mapUrl = `https://www.google.com/maps/embed/v1/directions?key=${
+    import.meta.env.GOOGLE_MAP_API_KEY
+  }&origin=${from}&destination=${to}&mode=${
+    transportType === "rideshare" || transportType === "taxi"
+      ? "driving"
+      : transportType
+  }`;
+
+  const mapDiv = document.createElement("div");
+  mapDiv.innerHTML = `<iframe width="100%" height="400" src="${mapUrl}" frameborder="0" style="border:0;"></iframe>`;
+  outputDiv.appendChild(mapDiv);
+
+  const costsDiv = document.createElement("div");
+  costsDiv.className = "costs";
+  outputDiv.appendChild(costsDiv);
+
+  const timesDiv = document.createElement("div");
+  timesDiv.className = "times";
+  outputDiv.appendChild(timesDiv);
+
+  const aiLines = aiResponse.split("\n");
+
+  aiLines.forEach((line) => {
+    if (line.toLowerCase().includes("cost") || line.toLowerCase().includes("r")) {
+      const costDiv = document.createElement("div");
+      costDiv.textContent = line;
+      costsDiv.appendChild(costDiv);
+    } else if (line.toLowerCase().includes("time")) {
+      const timeDiv = document.createElement("div");
+      timeDiv.textContent = line;
+      if (line.includes("Ride-hailing")) {
+        const uberLink = document.createElement("a");
+        uberLink.href = `uber://?action=setPickup&pickup=my_location&dropoff[latitude]=${to}&dropoff[longitude]=${to}&dropoff[nickname]=${to}`;
+        uberLink.textContent = "Open Uber";
+        timeDiv.appendChild(uberLink);
+      }
+      timesDiv.appendChild(timeDiv);
+    }
+  });
+
+    const stopBtn = document.createElement('button');
+    stopBtn.className = 'btn primary';
+    stopBtn.textContent = 'Stop';
+    outputDiv.appendChild(stopBtn);
+
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.style.display = 'none'; // Hide the submit button
+
+    stopBtn.addEventListener('click', () => {
+        if (currentStream) {
+            currentStream.controller.abort(); // Abort the stream
+            currentStream = null;
+            
+            // Remove stop button and show submit button
+            stopBtn.remove();
+            submitBtn.style.display = 'block';
+        }
+        const outputDiv = document.getElementById("output");
+        outputDiv.innerHTML = `
+        <div class='error-message'>
+         stopped AI
+        </div>
+    `;
+
+  });
+}
 
 
 function setupLoggedInState() {
   // Set current location if available
-  const fromInput = document.getElementById('from');
+  const fromInput = document.getElementById("from");
   if (fromInput && !fromInput.value) {
-    getCurrentLocation().then(location => {
+    getCurrentLocation().then((location) => {
       if (location) {
         fromInput.value = location;
-        ChatMessage.add(`I've automatically set your current location to ${location}`, 'bot');
       }
-    }).catch(error => {
-      console.error('Location detection failed:', error);
+    }).catch((error) => {
+      console.error("Location detection failed:", error);
     });
   }
 
-  const headerActions = document.querySelector('.header-actions');
-  const profileBtn = document.createElement('button');
-  profileBtn.className = 'btn icon-btn';
+  const headerActions = document.querySelector(".header-actions");
+  const profileBtn = document.createElement("button");
+  profileBtn.className = "btn icon-btn";
   profileBtn.innerHTML = '<i class="fas fa-user"></i>';
-  profileBtn.addEventListener('click', showProfilePage);
+  profileBtn.addEventListener("click", showProfilePage);
   headerActions.prepend(profileBtn);
-
-  
-
-  // Add logout button
-  const logoutBtn = document.createElement('button');
-  logoutBtn.className = 'btn icon-btn';
+  const logoutBtn = document.createElement("button");
+  logoutBtn.className = "btn icon-btn";
   logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
-  document.querySelector('.header-actions').appendChild(logoutBtn);
-
-  logoutBtn.addEventListener('click', async () => {
+  document.querySelector(".header-actions").appendChild(logoutBtn);
+  logoutBtn.addEventListener("click", async () => {
     try {
       const { error } = await logout();
       if (error) throw error;
-      
+
       currentUser = null;
       authModal.show();
-      document.getElementById('output').innerHTML = '';
-      ChatMessage.add('Please log in to continue using Uthutho.', 'bot');
+      document.getElementById("output").innerHTML = "";
+      ChatMessage.add("Please log in to continue using Uthutho.", "bot");
       logoutBtn.remove();
       
       // Remove user info from header
       const userInfoElement = document.querySelector('.user-info');
       if (userInfoElement) userInfoElement.remove();
     } catch (error) {
-      console.error('Logout failed:', error);
-      ChatMessage.add(`Logout failed: ${error.message}`, 'bot');
+      console.error("Logout failed:", error);
+      ChatMessage.add(`Logout failed: ${error.message}`, "bot");
     }
   });
-}
-
-
-async function showProfilePage() {
-  // Create profile form
+};
   const profileHTML = `
     <div class="profile-container">
       <h2>My Profile</h2>
@@ -226,25 +297,41 @@ async function showProfilePage() {
       </form>
     </div>
   `;
+  async function showProfilePage() {
+    // Create modal element
+    const modal = document.createElement("div");
+    modal.id = "profile-modal";
+    modal.className = "modal";
+    modal.innerHTML = `
+    <div class="modal-content">
+      <span class="close">&times;</span>
+    </div>
+  `;
+    document.body.appendChild(modal);
+    modal.querySelector(".modal-content").insertAdjacentHTML("beforeend", profileHTML);
 
-  // Show profile form in chat container temporarily
-  const chatContainer = document.getElementById('output');
-  chatContainer.innerHTML = '';
-  chatContainer.insertAdjacentHTML('afterbegin', profileHTML);
-
-  setupAddressAutocomplete('profile-home', 'home-suggestions');
-  
-  document.getElementById('profile-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    await updateProfile({
-      first_name: document.getElementById('profile-first-name').value,
-      last_name: document.getElementById('profile-last-name').value,
-      home: document.getElementById('profile-home').value
+    // Add event listener to close button
+    const closeBtn = modal.querySelector(".close");
+    closeBtn.addEventListener("click", () => {
+      modal.remove();
     });
-    // Reload to refresh the UI
-    location.reload();
-  });
-}
+
+    // Display modal
+    modal.style.display = "block";
+
+    setupAddressAutocomplete("profile-home", "home-suggestions");
+
+    document.getElementById("profile-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await updateProfile({
+        first_name: document.getElementById("profile-first-name").value,
+        last_name: document.getElementById("profile-last-name").value,
+        home: document.getElementById("profile-home").value,
+      });
+      // Reload to refresh the UI
+      location.reload();
+    });
+  }
 
 
 function setupHeaderUserInfo() {
@@ -252,30 +339,30 @@ function setupHeaderUserInfo() {
 
   // Remove existing user info if present
   const existingInfo = document.querySelector('.user-info');
-  if (existingInfo) existingInfo.remove();
+if (existingInfo) existingInfo.remove();
+const headerActions = document.querySelector('.header-actions');
+if (!headerActions) return;
 
-  const headerActions = document.querySelector('.header-actions');
-  if (!headerActions) return;
+const userInfo = document.createElement('div');
+userInfo.className = 'user-info';
+userInfo.innerHTML = `
+`;
+headerActions.prepend(userInfo);
 
-  const userInfo = document.createElement('div');
-  userInfo.className = 'user-info';
-  userInfo.innerHTML = `
-  `;
-  headerActions.prepend(userInfo);
 }
 
-function setupThemeToggle() {
-  const themeToggle = document.getElementById('theme-toggle');
-  if (!themeToggle) return;
+function setupThemeToggle() {    
+    const themeToggle = document.getElementById("theme-toggle");
+    if (!themeToggle) return;
 
-  themeToggle.addEventListener('click', () => {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    if (currentTheme === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'light');
-      themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-    } else {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-    }
-  });
+    themeToggle.addEventListener("click", () => {
+      const currentTheme = document.documentElement.getAttribute("data-theme");
+      if (currentTheme === "dark") {
+        document.documentElement.setAttribute("data-theme", "light");
+        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+      } else {
+        document.documentElement.setAttribute("data-theme", "dark");
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+      }
+    });
 }
