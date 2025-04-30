@@ -1,10 +1,11 @@
 // Free Nominatim API for address suggestions (no key required)
 export async function getAddressSuggestions(query) {
   try {
+    // Adding `countrycodes=za` to limit results to South Africa
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5`,
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5&countrycodes=za`,
       {
-        headers: {
+        headers: {    
           'User-Agent': 'UthuthoTransportApp (info@uthutho.co.za)',
           'Accept': 'application/json'
         }
@@ -96,8 +97,9 @@ export async function getCurrentLocation() {
 // Reverse geocode coordinates to address using Nominatim
 async function reverseGeocode(lat, lon) {
   try {
+    // Adding `countrycodes=za` to limit results to South Africa
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&countrycodes=za`,
       {
         headers: {
           'User-Agent': 'UthuthoTransportApp (info@uthutho.co.za)',
