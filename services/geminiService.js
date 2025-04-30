@@ -6,24 +6,22 @@ const googleAPIKEY = import.meta.env.GOOGLE_API_KEY;
 export function generatePrompt(from, to, language, queryType, transportType) {
     const prompts = {
         en: {
-            full: `Plan route from ${from} to ${to} using ${transportType}. Include time estimates, costs, and safety tips. Use the website https://www.gabs.co.za/Timetable.aspx as the source of your information, make sure that all of the information you find are from this website.`,
-            'time-only': `Provide only the estimated travel time from ${from} to ${to} using ${transportType}. Use the website https://www.gabs.co.za/Timetable.aspx as the source of your information, make sure that all of the information you find are from this website.`
+            full: `Plan route from ${from} to ${to} using ${transportType}. Include time estimates, costs, and safety tips.`,
+            'time-only': `Provide only the estimated travel time from ${from} to ${to} using ${transportType}.`
         },
         zu: {
-            full: `Yila indlela kusuka ${from} ukuya ${to} usebenzisa ${transportType}. Fakazi isikhathi, izindleko, nezexwayiso. Use the website https://www.gabs.co.za/Timetable.aspx as the source of your information, make sure that all of the information you find are from this website.`,
-            'time-only': `Nikeza kuphela isikhathi esilinganiselwe sokuhamba ukusuka ${from} ukuya ${to} usebenzisa ${transportType}. Use the website https://www.gabs.co.za/Timetable.aspx as the source of your information, make sure that all of the information you find are from this website.`
+            full: `Yila indlela kusuka ${from} ukuya ${to} usebenzisa ${transportType}. Fakazi isikhathi, izindleko, nezexwayiso.`,
+            'time-only': `Nikeza kuphela isikhathi esilinganiselwe sokuhamba ukusuka ${from} ukuya ${to} usebenzisa ${transportType}.`
         },
         xh: {
-            full: `Yila indlela ukusuka ${from} ukuya ${to} usebenzisa ${transportType}. Dibana nexesha, amaxabiso, neengcebiso zokhuseleko. Use the website https://www.gabs.co.za/Timetable.aspx as the source of your information, make sure that all of the information you find are from this website.`,
-            'time-only': `Nikezela kuphela ixesha eliqikelelwayo lokuhamba ukusuka ${from} ukuya ${to} usebenzisa ${transportType}. Use the website https://www.gabs.co.za/Timetable.aspx as the source of your information, make sure that all of the information you find are from this website.`
+            full: `Yila indlela ukusuka ${from} ukuya ${to} usebenzisa ${transportType}. Dibana nexesha, amaxabiso, neengcebiso zokhuseleko.`,
+            'time-only': `Nikezela kuphela ixesha eliqikelelwayo lokuhamba ukusuka ${from} ukuya ${to} usebenzisa ${transportType}.`
         }
     };
     if(queryType === 'full'){
         return prompts[language]?.full || prompts.en.full;
     }
     return prompts[language]?.[queryType] || prompts.en[queryType];
-
-  return prompts[language] || prompts.en;
 }
 
 export async function getGeminiResponse(prompt) {

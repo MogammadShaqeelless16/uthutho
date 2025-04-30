@@ -1,5 +1,5 @@
 :root {
-  --primary-color: #0860fb;
+  --primary-color: #1ea2b1;
   --secondary-color: #166088;
   --accent-color: #4fc3f7;
   --text-color: #333;
@@ -278,6 +278,10 @@ header {
   background-repeat: no-repeat;
   background-position: right 16px center;
   background-size: 16px;
+}
+.language-select{
+  @extend .transport-select;
+  margin-bottom: 0;
 }
 
 /* Footer */
