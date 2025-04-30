@@ -12,6 +12,26 @@ import {
 let authModal, transportService, transportForm;
 let currentUser = null;
 
+function changeHtmlLanguage(language) {
+  document.documentElement.lang = language;
+  const languageSelect = document.getElementById('languageSelect');
+  if (languageSelect) {
+      const options = languageSelect.options;
+      for (let i = 0; i < options.length; i++) {
+          const option = options[i];
+          if (option.value === 'en') {
+              option.text = 'English';
+          } else if (option.value === 'zu') {
+              option.text = 'Zulu';
+          } else if (option.value === 'xh') {
+              option.text = 'Xhosa';
+          } else if (option.value === 'af') {
+              option.text = 'Afrikaans';
+          }
+      }
+  }
+}
+
 document.addEventListener("DOMContentLoaded", async function () {
     // Initialize services and components
     authModal = new AuthModal();
@@ -101,6 +121,14 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     // Set up theme toggle
     setupThemeToggle();
+
+    // Change HTML language based on selection
+    const languageSelect = document.getElementById('languageSelect');
+    changeHtmlLanguage(languageSelect.value);
+    languageSelect.addEventListener('change', (e) => {
+        changeHtmlLanguage(e.target.value);
+    });
+
 
   } catch (error) {
     console.error('Initialization error:', error);
