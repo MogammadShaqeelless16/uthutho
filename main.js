@@ -176,7 +176,6 @@ function setupLoggedInState() {
   // Add logout button
   const logoutBtn = document.createElement('button');
   logoutBtn.className = 'btn icon-btn';
-  logoutBtn.id = 'logout-btn';
   logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
   document.querySelector('.header-actions').appendChild(logoutBtn);
 
