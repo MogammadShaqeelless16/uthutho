@@ -232,8 +232,6 @@ function setupHeaderUserInfo() {
   const userInfo = document.createElement('div');
   userInfo.className = 'user-info';
   userInfo.innerHTML = `
-    <span class="user-name">${currentUser.profile.first_name || 'User'}</span>
-    <span class="user-title">${currentUser.profile.selected_title || 'Explorer'}</span>
   `;
   headerActions.prepend(userInfo);
 }
