@@ -2,7 +2,7 @@ import { AuthModal } from './components/auth/AuthModal.js';
 import { ChatMessage } from './components/chat/ChatMessage.js';
 import { TransportForm } from './components/forms/TransportForm.js';
 import { TransportService } from './services/transportService.js';
-import { getSession, login, signup, logout, getProfile } from './services/authService.js';
+import { getSession, login, signup, logout, getProfile, createProfile, updateProfile as updateSupabaseProfile } from './services/authService.js';
 import { 
   getCurrentLocation,
   setupAddressAutocomplete,
@@ -49,14 +49,18 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         currentUser = data.user;
         // Fetch profile after successful login
-        const profile = await getProfile(currentUser.id);
-        currentUser.profile = profile || {
-          first_name: currentUser.user_metadata?.first_name || '',
-          last_name: currentUser.user_metadata?.last_name
-        };
+        let profile = await getProfile(currentUser.id);
+        if(!profile){
+          profile = await createProfile(currentUser.id, data.user.user_metadata?.first_name, data.user.user_metadata?.last_name)
+        }
+        currentUser.profile = profile;
+
+        currentUser.isFirstTimeLogin = true;
+        
         authModal.hide();
 
-        showWelcomeMessage(currentUser.profile?.first_name);
+        currentUser.isFirstTimeLogin = true;
+        showWelcomeMessage(currentUser.profile?.first_name, currentUser.isFirstTimeLogin);
         setupLoggedInState();
         setupHeaderUserInfo();
         return null;
@@ -68,17 +72,18 @@ document.addEventListener("DOMContentLoaded", async function () {
           return error;
         }
 
-                currentUser = data.user;
-        // Profile is created during signup but we fetch to confirm
-        const profile = await getProfile(currentUser.id);
-        currentUser.profile = profile || {
-          first_name: firstName,
-          last_name: lastName
+        currentUser = data.user;
+        // Fetch profile after successful signup
+        let profile = await getProfile(currentUser.id);
+        if(!profile){
+          profile = await createProfile(currentUser.id, firstName, lastName);
         };
+        currentUser.profile = profile;
 
         authModal.hide();
+        currentUser.isFirstTimeLogin = true;
 
-        showWelcomeMessage(firstName);
+        showWelcomeMessage(firstName, currentUser.isFirstTimeLogin);
         setupLoggedInState();
         setupHeaderUserInfo();
         return null;
@@ -96,17 +101,18 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     if (session) {
       currentUser = session.user;
-      // Ensure we have profile data
-      if (!currentUser.profile) {
-        currentUser.profile = await getProfile(currentUser.id) || {
-          first_name: currentUser.user_metadata?.first_name || '',
-          last_name: currentUser.user_metadata?.last_name
-        };
-      } 
-      
+      // Fetch profile after successful session
+      let profile = await getProfile(currentUser?.id);
+      if(!profile){
+        profile = await createProfile(currentUser?.id, currentUser?.user_metadata?.first_name, currentUser?.user_metadata?.last_name);
+      }
+      if(currentUser) {
+        currentUser.profile = profile;
+      }
       authModal.hide();
 
-      showWelcomeMessage(currentUser.profile?.first_name);
+      currentUser.isFirstTimeLogin = false;
+      showWelcomeMessage(currentUser.profile?.first_name, currentUser.isFirstTimeLogin);
       setupLoggedInState();
       setupHeaderUserInfo();
     } else {
@@ -135,9 +141,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     console.error('Initialization error:', error);
     ChatMessage.add(`
       ❌ Application Error: 
-      ${error.message}
+      ${error.message} \
       Please refresh the page or try again later.
-    `, 'bot');
+    `, "bot");
 
     document.getElementById("output").innerHTML = `
     <div class='error-message'>
@@ -151,10 +157,12 @@ document.addEventListener("DOMContentLoaded", async function () {
 });
 
 
-function showWelcomeMessage(firstName = null) {
-  const message = firstName
+function showWelcomeMessage(firstName = null, isFirstTime) {
+  const message = isFirstTime
     ? `Welcome ${firstName}! 👋 I'm Uthutho, your transport AI assistant. Where would you like to go today?`
-    : "Welcome back! Where would you like to go today?";
+    : `Welcome back, ${firstName}! 👋 I'm Uthutho, your transport AI assistant. Where would you like to go today?`;
+
+  
   ChatMessage.add(message, "bot");
 }
 
@@ -221,18 +229,23 @@ function showAiResponse(from, to, transportType, aiResponse) {
             submitBtn.style.display = 'block';
         }
         const outputDiv = document.getElementById("output");
-        outputDiv.innerHTML = `
+        outputDiv.innerHTML = `\
         <div class='error-message'>
          stopped AI
         </div>
     `;
-
   });
 }
 
 
 function setupLoggedInState() {
   // Set current location if available
+  if (!currentUser.profile) {
+    if(currentUser){
+      currentUser.profile = {};
+    }
+  }
+  if(!currentUser) return;
   const fromInput = document.getElementById("from");
   if (fromInput && !fromInput.value) {
     getCurrentLocation().then((location) => {
@@ -247,7 +260,7 @@ function setupLoggedInState() {
   const headerActions = document.querySelector(".header-actions");
   const profileBtn = document.createElement("button");
   profileBtn.className = "btn icon-btn";
-  profileBtn.innerHTML = '<i class="fas fa-user"></i>';
+  profileBtn.innerHTML = '<i class=\"fas fa-user\"></i>';
   profileBtn.addEventListener("click", showProfilePage);
   headerActions.prepend(profileBtn);
   const logoutBtn = document.createElement("button");
@@ -274,7 +287,19 @@ function setupLoggedInState() {
     }
   });
 };
-  const profileHTML = `
+
+  async function updateProfile(profileData) {
+    if (currentUser) {
+      const updatedProfile = await updateSupabaseProfile(currentUser.id, profileData);
+      if (updatedProfile) {
+          currentUser.profile = { ...currentUser.profile, ...updatedProfile[0] };
+      } else {
+          console.error("Failed to update profile");
+      }
+        setupHeaderUserInfo();
+    }
+  }
+  const profileHTML = `\
     <div class="profile-container">
       <h2>My Profile</h2>
       <form id="profile-form">
@@ -303,8 +328,8 @@ function setupLoggedInState() {
     modal.id = "profile-modal";
     modal.className = "modal";
     modal.innerHTML = `
-    <div class="modal-content">
-      <span class="close">&times;</span>
+    <div class=\"modal-content\">
+      <span class=\"close\">&times;</span>
     </div>
   `;
     document.body.appendChild(modal);
@@ -335,22 +360,24 @@ function setupLoggedInState() {
 
 
 function setupHeaderUserInfo() {
-  if (!currentUser?.profile) return;
-
+  if (!currentUser) return;
+  if (!currentUser.profile) return;
+  
   // Remove existing user info if present
   const existingInfo = document.querySelector('.user-info');
-if (existingInfo) existingInfo.remove();
-const headerActions = document.querySelector('.header-actions');
-if (!headerActions) return;
+  if (existingInfo) existingInfo.remove();
+  
+  const headerActions = document.querySelector('.header-actions');
+  if (!headerActions) return;
 
-const userInfo = document.createElement('div');
-userInfo.className = 'user-info';
-userInfo.innerHTML = `
-`;
-headerActions.prepend(userInfo);
+  
+  const userInfo = document.createElement('div');
+  userInfo.className = 'user-info';
+  userInfo.innerHTML = `${currentUser.profile.first_name} ${currentUser.profile.last_name}`;
+  headerActions.prepend(userInfo)
 
-}
-
+  }
+;
 function setupThemeToggle() {    
     const themeToggle = document.getElementById("theme-toggle");
     if (!themeToggle) return;

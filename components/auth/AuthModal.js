@@ -1,3 +1,5 @@
+import { supabase } from '../../supabase.js';
+
 export class AuthModal {
     constructor() {
       this.modal = document.getElementById('auth-modal');
@@ -5,29 +7,41 @@ export class AuthModal {
       this.signupForm = document.getElementById('signup-form');
     }
   
-    init({ onLogin, onSignup }) {
+    init({ onLogin, onSignup, onGoogleSignUp, onFacebookSignUp }) {
       // Form toggling
-      document.getElementById('show-login')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.showLoginForm();
-      });
-      
-      document.getElementById('show-signup')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.showSignupForm();
-      });
-  
-      document.querySelector('.close-modal')?.addEventListener('click', () => this.hide());
-  
+      const showLoginButton = document.getElementById('show-login');
+      if (showLoginButton) {
+        showLoginButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.showLoginForm();
+        });
+      }
+    
+      const showSignupButton = document.getElementById('show-signup');
+      if (showSignupButton) {
+        showSignupButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.showSignupForm();
+        });
+      }
+    
+      const closeModalButton = document.querySelector('.close-modal');
+      if (closeModalButton) {
+        closeModalButton.addEventListener('click', () => this.hide());
+      }
+    
       // Form submissions
-      this.loginForm?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-        await onLogin(email, password);
-      });
-  
-      this.signupForm?.addEventListener('submit', async (e) => {
+      if (this.loginForm) {
+        this.loginForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const email = document.getElementById('login-email').value;
+          const password = document.getElementById('login-password').value;
+          await onLogin(email, password);
+        });
+      }
+    
+      if (this.signupForm) {
+        this.signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('signup-email').value;
         const password = document.getElementById('signup-password').value;
@@ -35,6 +49,29 @@ export class AuthModal {
         const lastName = document.getElementById('last-name').value;
         await onSignup(email, password, firstName, lastName);
       });
+    }
+
+      // Google Sign-Up
+      const googleBtn = document.getElementById('google-signup');
+      if (googleBtn) {
+        googleBtn.addEventListener('click', async () => {
+          const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+          });
+          if (error) this.showError(error.message);
+        });
+      }
+
+      // Facebook Sign-Up
+      const facebookBtn = document.getElementById('facebook-signup');
+      if (facebookBtn) {
+        facebookBtn.addEventListener('click', async () => {
+          const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'facebook',
+          });
+          if (error) this.showError(error.message);
+        });
+      }
     }
   
     show() { this.modal.style.display = 'block'; }

@@ -20,6 +20,21 @@ export async function getProfile(userId) {
   return data;
 }
 
+export async function updateProfile(userId, updates) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update(updates)
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating profile:', error);
+    return null;
+  }
+  return data;
+}
+
 export async function createProfile(userId, firstName, lastName) {
   const { data, error } = await supabase
     .from('profiles')

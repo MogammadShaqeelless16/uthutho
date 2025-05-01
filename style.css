@@ -219,6 +219,7 @@ header {
 
 .message.bot {
   align-self: flex-start;
+  margin: 10px;
   background-color: var(--card-bg);
   border: 1px solid var(--border-color);
   border-bottom-left-radius: var(--radius-sm);
