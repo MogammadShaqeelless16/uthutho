@@ -11,6 +11,7 @@ export class TransportForm {
     this.transportSelect = document.getElementById('transportSelect');
     this.currentLocationBtn = document.getElementById('current-location');
     this.timeEstimateBtn = document.getElementById('time-estimate-btn');
+    this.priceRangeBtn = document.getElementById('price-range-btn');
   }
 
   init() {
@@ -18,6 +19,7 @@ export class TransportForm {
     this.form?.addEventListener('submit', (e) => this.handleSubmit(e, 'full'));
     this.timeEstimateBtn?.addEventListener('click', () => this.handleSubmit(null, 'time-only'));
     this.currentLocationBtn?.addEventListener('click', () => this.setCurrentLocation());
+    this.priceRangeBtn?.addEventListener('click', () => this.handleSubmit(null, 'price-only'));
 
     // Initialize current location if available
     this.setCurrentLocation();

@@ -384,6 +384,15 @@ footer {
   background-color: var(--secondary-color);
 }
 
+.oauth-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin: 10px 0;
+}
+
 /* Options Modal Styles */
 .options-grid {
   display: grid;
@@ -543,4 +552,19 @@ footer {
   .btn {
     padding: 12px 16px;
   }
+}
+
+.google-btn,
+.facebook-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: left;
 }

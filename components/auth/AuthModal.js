@@ -41,7 +41,7 @@ export class AuthModal {
       }
     
       if (this.signupForm) {
-        this.signupForm.addEventListener('submit', async (e) => {
+        this.signupForm.addEventListener('submit', async (e) => { 
         e.preventDefault();
         const email = document.getElementById('signup-email').value;
         const password = document.getElementById('signup-password').value;
@@ -55,10 +55,19 @@ export class AuthModal {
       const googleBtn = document.getElementById('google-signup');
       if (googleBtn) {
         googleBtn.addEventListener('click', async () => {
-          const { error } = await supabase.auth.signInWithOAuth({
+          const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
           });
-          if (error) this.showError(error.message);
+          if (error) {
+            this.showError(`Error signing in with Google: ${error.message}`);
+          } else {
+             const { data, error } = await supabase.auth.getSession()
+             if(data.session){
+              await onLogin(data.session.user.email, null)
+             }else{
+              this.showError(`Error signing in with Google.`)
+             }
+          }
         });
       }
 
@@ -66,10 +75,19 @@ export class AuthModal {
       const facebookBtn = document.getElementById('facebook-signup');
       if (facebookBtn) {
         facebookBtn.addEventListener('click', async () => {
-          const { error } = await supabase.auth.signInWithOAuth({
+          const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'facebook',
           });
-          if (error) this.showError(error.message);
+          if (error) {
+            this.showError(`Error signing in with Facebook: ${error.message}`);
+          }else {
+             const { data, error } = await supabase.auth.getSession()
+             if(data.session){
+              await onLogin(data.session.user.email, null)
+             }else{
+              this.showError(`Error signing in with Facebook.`)
+             }
+          }
         });
       }
     }

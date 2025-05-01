@@ -20,7 +20,20 @@ export class TransportService {
     const loadingMsg = ChatMessage.add('Finding options...', 'bot', true);
 
     try {
-      const prompt = generatePrompt(fromLocation, toLocation, language, this.queryType, transportType);
+      let prompt;
+      switch (this.queryType) {
+        case 'price-only':
+          prompt = `What is the price range for traveling from ${fromLocation} to ${toLocation} using ${transportType} in ${language}?`;
+          break;
+        case 'time-only':
+          prompt = `How long does it take to travel from ${fromLocation} to ${toLocation} using ${transportType} in ${language}?`;
+          break;
+        case 'full':
+        default:
+          prompt = generatePrompt(fromLocation, toLocation, language, this.queryType, transportType);
+          break;
+      }
+      
       const response = await getGeminiResponse(prompt);
       ChatMessage.remove(loadingMsg);
       ChatMessage.add(response, 'bot');
